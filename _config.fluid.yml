@@ -1002,8 +1002,7 @@ about:
     - { class: "iconfont icon-github-fill", link: "https://github.com/THEXN", tip: "GitHub" }
     - { class: "iconfont icon-qq-fill", link: "tencent://message/?uin=2383759126", tip: "QQ" }
     - { class: "iconfont icon-bilibili-fill", link: "https://space.bilibili.com/171369384", tip: "bilibili" }
-    - { class: "iconfont icon-mail", link: "2383759126@qq.com", tip: "邮件" }
-    - { class: "iconfont icon-wechat-fill", qrcode: "/img/favicon.png" }
+    - { class: "iconfont icon-mail", link: "mailto:2383759126@qq.com", tip: "邮件" }
 
 
 #---------------------------
