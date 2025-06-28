@@ -1,4 +1,5 @@
 ---
+layout: false
 title: ARKPay
 permalink: :title/
 permalink_defaults:
