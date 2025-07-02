@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terraria 服务器状态</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .status-card {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: bold;
+            color: #666;
+        }
+        .value {
+            color: #333;
+        }
+        .refresh-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+        }
+        .refresh-btn:hover {
+            background: #45a049;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-card">
+        <h1>Terraria 服务器状态</h1>
+        
+        <div id="status-content">
+            <div class="loading">正在加载服务器状态...</div>
+        </div>
+        
+        <button class="refresh-btn" onclick="loadServerStatus()">刷新状态</button>
+    </div>
+
+    <script>
+        // 修改这里的URL为你的服务器地址和token
+        const API_URL = 'http://203.135.99.51:10141/api/server/status?token=info';
+        
+        function loadServerStatus() {
+            const content = document.getElementById('status-content');
+            content.innerHTML = '<div class="loading">正在加载服务器状态...</div>';
+            
+            fetch(API_URL)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "200" && data.response) {
+                        // 解析 response 字段中的 JSON 数据
+                        const serverData = JSON.parse(data.response);
+                        displayStatus(serverData);
+                    } else {
+                        content.innerHTML = '<div class="error">服务器返回错误</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    content.innerHTML = '<div class="error">无法连接到服务器</div>';
+                });
+        }
+        
+        function displayStatus(data) {
+            const content = document.getElementById('status-content');
+            
+            content.innerHTML = `
+                <div class="status-item">
+                    <span class="label">服务器名称:</span>
+                    <span class="value">${data.name}</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">在线玩家:</span>
+                    <span class="value">${data.playercount}/${data.maxplayers}</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">游戏版本:</span>
+                    <span class="value">${data.version}</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">运行时间:</span>
+                    <span class="value">${data.uptime}</span>
+                </div>
+            `;
+        }
+        
+        // 页面加载时自动获取状态
+        window.onload = function() {
+            loadServerStatus();
+        };
+        
+        // 每30秒自动刷新一次
+        setInterval(loadServerStatus, 30000);
+    </script>
+</body>
+</html>
