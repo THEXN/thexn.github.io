@@ -1,3 +1,8 @@
+---
+layout: true
+---
+
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -206,30 +211,30 @@
 
             if (data.status === "200") {
                 content.innerHTML = `
-                        <div class="status-item">
-                            <span class="label">在线玩家:</span>
-                            <span class="value">${data.playercount || 0}/${data.maxplayers || '?'}</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="label">状态消息:</span>
-                            <span class="value">${data.message || '无状态消息'}</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="label">响应状态:</span>
-                            <span class="value"><span class="highlight">成功</span></span>
-                        </div>
-                    `;
+                            <div class="status-item">
+                                <span class="label">在线玩家:</span>
+                                <span class="value">${data.playercount || 0}/${data.maxplayers || '?'}</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">状态消息:</span>
+                                <span class="value">${data.message || '无状态消息'}</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">响应状态:</span>
+                                <span class="value"><span class="highlight">成功</span></span>
+                            </div>
+                        `;
             } else {
                 content.innerHTML = `
-                        <div class="status-item">
-                            <span class="label">响应状态:</span>
-                            <span class="value"><span class="highlight error">失败</span></span>
-                        </div>
-                        <div class="status-item">
-                            <span class="label">错误信息:</span>
-                            <span class="value">${data.error || '未知错误'}</span>
-                        </div>
-                    `;
+                            <div class="status-item">
+                                <span class="label">响应状态:</span>
+                                <span class="value"><span class="highlight error">失败</span></span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">错误信息:</span>
+                                <span class="value">${data.error || '未知错误'}</span>
+                            </div>
+                        `;
             }
         }
 
