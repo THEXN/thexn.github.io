@@ -8,18 +8,13 @@ layout: true
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terraria服务器状态 - 调试版</title>
+    <title>Terraria服务器状态测试</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 900px;
+            max-width: 800px;
             margin: 20px auto;
             padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
         }
 
         .section {
@@ -44,25 +39,17 @@ layout: true
         .label {
             font-weight: bold;
             color: #555;
+            min-width: 120px;
         }
 
         .value {
             color: #333;
         }
 
-        .debug-section pre {
-            background: #f8f8f8;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-            font-size: 0.9em;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0;
-            justify-content: center;
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
         }
 
         button {
@@ -72,11 +59,8 @@ layout: true
             padding: 10px 20px;
             border-radius: 4px;
             cursor: pointer;
+            margin-top: 10px;
         }
-
-            button:hover {
-                background: #45a049;
-            }
 
         .error {
             color: red;
@@ -89,186 +73,150 @@ layout: true
             font-style: italic;
         }
 
-        .toggle-btn {
-            background: #2196F3;
+        .debug {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 4px;
         }
 
-            .toggle-btn:hover {
-                background: #0b7dda;
-            }
-
-        .highlight {
-            background: #fff3cd;
-            padding: 2px 4px;
-            border-radius: 3px;
+        .debug-title {
+            font-weight: bold;
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Terraria服务器状态调试工具</h1>
-        <p>用于测试API接口并查看详细响应数据</p>
-    </div>
-
     <div class="section">
-        <h2>服务器状态</h2>
+        <h2>Terraria服务器状态</h2>
+
         <div id="status-content">
             <div class="loading">正在加载服务器状态...</div>
         </div>
+
+        <button onclick="loadServerStatus()">刷新状态</button>
     </div>
 
-    <div class="section">
-        <h2>调试工具</h2>
-        <div class="btn-group">
-            <button id="refresh-btn" onclick="loadServerStatus()">刷新状态</button>
-            <button id="toggle-debug" onclick="toggleDebug()">显示/隐藏调试信息</button>
-            <button id="clear-logs" onclick="clearLogs()">清除日志</button>
-        </div>
-
-        <div id="debug-container" style="display: none;">
-            <h3>API请求详情</h3>
-            <div class="debug-section">
-                <pre id="request-log"></pre>
-            </div>
-
-            <h3>API响应数据</h3>
-            <div class="debug-section">
-                <pre id="response-log"></pre>
-            </div>
-
-            <h3>控制台日志</h3>
-            <div class="debug-section">
-                <pre id="console-log"></pre>
-            </div>
-        </div>
+    <div class="section debug">
+        <div class="debug-title">调试信息</div>
+        <pre id="debug-content"></pre>
     </div>
 
     <script>
-        // 修改为你的API地址
-        const API_URL = 'http://203.135.99.51:10141/test';
+        // API地址 - 修改为你的实际地址
+        const API_URL = 'http://203.135.99.51:10141/v2/server/status/';
 
-        // 日志存储
-        const logs = [];
+        // JSONP代理服务 - 用于绕过跨域限制
+        const JSONP_PROXY = 'https://jsonp.afeld.me/?url=';
+
+        // 调试日志
+        function debugLog(message) {
+            const debugContent = document.getElementById('debug-content');
+            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+            debugContent.textContent += `[${timestamp}] ${message}\n`;
+            debugContent.scrollTop = debugContent.scrollHeight;
+            console.log(`[DEBUG] ${message}`);
+        }
 
         function loadServerStatus() {
-            const statusContent = document.getElementById('status-content');
-            const requestLog = document.getElementById('request-log');
-            const responseLog = document.getElementById('response-log');
+            const content = document.getElementById('status-content');
+            content.innerHTML = '<div class="loading">正在加载服务器状态...</div>';
+            debugLog(`开始请求: ${API_URL}`);
 
-            // 显示加载状态
-            statusContent.innerHTML = '<div class="loading">正在加载服务器状态...</div>';
-            requestLog.textContent = '准备发送请求...';
+            const script = document.createElement('script');
+            const callbackName = `jsonpCallback${Date.now()}`;
 
-            // 记录请求开始
-            const requestStart = new Date();
-            logMessage(`[${formatTime(requestStart)}] 发送API请求: ${API_URL}`);
+            window[callbackName] = function (data) {
+                try {
+                    debugLog('收到API响应');
+                    debugLog(JSON.stringify(data, null, 2));
 
-            // 发送请求
-            fetch(API_URL, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            })
-                .then(response => {
-                    // 记录请求响应
-                    const requestEnd = new Date();
-                    const duration = requestEnd - requestStart;
-
-                    logMessage(`[${formatTime(requestEnd)}] 请求完成 - 状态码: ${response.status} (耗时: ${duration}ms)`);
-                    requestLog.textContent = `请求URL: ${API_URL}\n请求方法: GET\n响应状态: ${response.status}\n耗时: ${duration}ms`;
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP错误! 状态码: ${response.status}`);
+                    if (data && data.status === "200") {
+                        displayStatus(data);
+                        debugLog('数据显示成功');
+                    } else {
+                        content.innerHTML = `<div class="error">服务器返回错误: ${data.error || '未知错误'}</div>`;
+                        debugLog(`错误: 服务器返回非200状态码 - ${data.status}`);
                     }
+                } catch (error) {
+                    content.innerHTML = `<div class="error">解析数据失败: ${error.message}</div>`;
+                    debugLog(`错误: 数据解析失败 - ${error.message}`);
+                    console.error('数据解析错误:', error);
+                } finally {
+                    // 清理
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                }
+            };
 
-                    return response.json();
-                })
-                .then(data => {
-                    // 处理成功响应
-                    const responseEnd = new Date();
-                    logMessage(`[${formatTime(responseEnd)}] 数据解析成功`);
+            // 构建JSONP请求URL
+            const jsonpUrl = `${JSONP_PROXY}${encodeURIComponent(API_URL)}&callback=${callbackName}`;
+            debugLog(`JSONP请求URL: ${jsonpUrl}`);
 
-                    // 显示状态数据
-                    displayStatus(data);
+            script.src = jsonpUrl;
 
-                    // 显示响应数据
-                    responseLog.textContent = JSON.stringify(data, null, 2);
-                })
-                .catch(error => {
-                    // 处理错误
-                    const errorTime = new Date();
-                    logMessage(`[${formatTime(errorTime)}] 错误: ${error.message}`);
+            script.onerror = function () {
+                content.innerHTML = '<div class="error">无法连接到服务器</div>';
+                debugLog('错误: 无法加载服务器状态 (script加载失败)');
+                delete window[callbackName];
+                document.body.removeChild(script);
+            };
 
-                    statusContent.innerHTML = `<div class="error">获取服务器状态失败: ${error.message}</div>`;
-                    responseLog.textContent = `错误: ${error.message}`;
-                });
+            document.body.appendChild(script);
         }
 
         function displayStatus(data) {
             const content = document.getElementById('status-content');
 
-            if (data.status === "200") {
-                content.innerHTML = `
-                            <div class="status-item">
-                                <span class="label">在线玩家:</span>
-                                <span class="value">${data.playercount || 0}/${data.maxplayers || '?'}</span>
-                            </div>
-                            <div class="status-item">
-                                <span class="label">状态消息:</span>
-                                <span class="value">${data.message || '无状态消息'}</span>
-                            </div>
-                            <div class="status-item">
-                                <span class="label">响应状态:</span>
-                                <span class="value"><span class="highlight">成功</span></span>
-                            </div>
-                        `;
-            } else {
-                content.innerHTML = `
-                            <div class="status-item">
-                                <span class="label">响应状态:</span>
-                                <span class="value"><span class="highlight error">失败</span></span>
-                            </div>
-                            <div class="status-item">
-                                <span class="label">错误信息:</span>
-                                <span class="value">${data.error || '未知错误'}</span>
-                            </div>
-                        `;
-            }
-        }
-
-        function toggleDebug() {
-            const debugContainer = document.getElementById('debug-container');
-            const toggleBtn = document.getElementById('toggle-debug');
-
-            if (debugContainer.style.display === 'none') {
-                debugContainer.style.display = 'block';
-                toggleBtn.textContent = '隐藏调试信息';
-            } else {
-                debugContainer.style.display = 'none';
-                toggleBtn.textContent = '显示调试信息';
-            }
-        }
-
-        function clearLogs() {
-            logs.length = 0;
-            document.getElementById('console-log').textContent = '';
-            logMessage('日志已清除');
-        }
-
-        function logMessage(message) {
-            logs.push(message);
-            document.getElementById('console-log').textContent = logs.join('\n');
-            console.log(message); // 同时输出到浏览器控制台
-        }
-
-        function formatTime(date) {
-            return date.toLocaleTimeString() + '.' + date.getMilliseconds().toString().padStart(3, '0');
+            content.innerHTML = `
+                    <div class="status-item">
+                        <span class="label">服务器状态:</span>
+                        <span class="value"><span class="highlight">${data.status === "200" ? "正常" : "异常"}</span></span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">服务器名称:</span>
+                        <span class="value">${data.name || '未设置'}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">游戏版本:</span>
+                        <span class="value">${data.serverversion || '未知'}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">TShock版本:</span>
+                        <span class="value">${data.tshockversion || '未知'}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">服务器端口:</span>
+                        <span class="value">${data.port || '未知'}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">在线玩家:</span>
+                        <span class="value">${data.playercount || 0}/${data.maxplayers || '?'}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">世界名称:</span>
+                        <span class="value">${data.world || '未设置'}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">运行时间:</span>
+                        <span class="value">${data.uptime || '未知'}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">服务器密码:</span>
+                        <span class="value">${data.serverpassword ? '已设置' : '未设置'}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">更新时间:</span>
+                        <span class="value">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                `;
         }
 
         // 页面加载时自动获取状态
         window.onload = loadServerStatus;
+
+        // 每30秒自动刷新一次
+        setInterval(loadServerStatus, 30000);
     </script>
 </body>
 </html>
