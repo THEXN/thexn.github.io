@@ -1,0 +1,725 @@
+---
+layout: false
+title: API
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API支持测试工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+            .test-section h3 {
+                color: #2c3e50;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+            }
+
+            .btn.success {
+                background: linear-gradient(135deg, #27ae60, #2ecc71);
+            }
+
+            .btn.error {
+                background: linear-gradient(135deg, #e74c3c, #c0392b);
+            }
+
+            .btn.warning {
+                background: linear-gradient(135deg, #f39c12, #e67e22);
+            }
+
+        .result {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+            .result.success {
+                border-color: #27ae60;
+                background: #d5f4e6;
+            }
+
+            .result.error {
+                border-color: #e74c3c;
+                background: #fdf2f2;
+            }
+
+            .result.warning {
+                border-color: #f39c12;
+                background: #fef9e7;
+            }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-unknown {
+            background-color: #95a5a6;
+        }
+
+        .status-success {
+            background-color: #27ae60;
+        }
+
+        .status-error {
+            background-color: #e74c3c;
+        }
+
+        .status-warning {
+            background-color: #f39c12;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+            .input-group label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: bold;
+                color: #2c3e50;
+            }
+
+            .input-group input {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                font-size: 14px;
+            }
+
+        .summary {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            border-left: 4px solid #9b59b6;
+        }
+
+            .summary h3 {
+                color: #2c3e50;
+                margin-bottom: 15px;
+            }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+            .summary-item:last-child {
+                border-bottom: none;
+            }
+
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 API支持测试工具</h1>
+            <p>检测你的API是否支持CORS和JSONP跨域访问</p>
+        </div>
+
+        <div class="content">
+            <!-- API配置 -->
+            <div class="test-section">
+                <h3>📝 API配置</h3>
+                <div class="input-group">
+                    <label for="apiUrl">API地址:</label>
+                    <input type="text" id="apiUrl" value="http://203.135.99.51:10141/v2/server/status?token=info" placeholder="输入你的API地址">
+                </div>
+                <button class="btn" onclick="updateApiUrl()">更新API地址</button>
+            </div>
+
+            <!-- CORS测试 -->
+            <div class="test-section">
+                <h3>
+                    <span class="status-indicator status-unknown" id="corsStatus"></span>
+                    🌐 CORS跨域测试
+                </h3>
+                <p>测试API是否支持跨域资源共享 (Cross-Origin Resource Sharing)</p>
+                <button class="btn" onclick="testCORS()">测试CORS支持</button>
+                <button class="btn" onclick="testPreflightCORS()">测试预检请求</button>
+                <div id="corsResult" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- JSONP测试 -->
+            <div class="test-section">
+                <h3>
+                    <span class="status-indicator status-unknown" id="jsonpStatus"></span>
+                    📡 JSONP测试
+                </h3>
+                <p>测试API是否支持JSONP回调格式</p>
+                <button class="btn" onclick="testJSONP()">测试JSONP支持</button>
+                <div id="jsonpResult" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- 响应头检查 -->
+            <div class="test-section">
+                <h3>
+                    <span class="status-indicator status-unknown" id="headersStatus"></span>
+                    📋 响应头检查
+                </h3>
+                <p>检查服务器返回的HTTP响应头</p>
+                <button class="btn" onclick="checkHeaders()">检查响应头</button>
+                <div id="headersResult" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- 服务器可达性测试 -->
+            <div class="test-section">
+                <h3>
+                    <span class="status-indicator status-unknown" id="reachabilityStatus"></span>
+                    🔗 服务器可达性测试
+                </h3>
+                <p>测试服务器是否可以从浏览器访问</p>
+                <button class="btn" onclick="testReachability()">测试连通性</button>
+                <div id="reachabilityResult" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- 测试总结 -->
+            <div class="summary">
+                <h3>📊 测试总结</h3>
+                <div class="summary-item">
+                    <span>CORS支持:</span>
+                    <span id="corsSummary">❓ 未测试</span>
+                </div>
+                <div class="summary-item">
+                    <span>JSONP支持:</span>
+                    <span id="jsonpSummary">❓ 未测试</span>
+                </div>
+                <div class="summary-item">
+                    <span>服务器可达:</span>
+                    <span id="reachabilitySummary">❓ 未测试</span>
+                </div>
+                <div class="summary-item">
+                    <span>建议方案:</span>
+                    <span id="recommendationSummary">请先进行测试</span>
+                </div>
+            </div>
+
+            <!-- 解决方案建议 -->
+            <div class="test-section">
+                <h3>💡 解决方案建议</h3>
+                <div id="solutionSuggestions">
+                    <p>完成测试后，这里会显示针对你的API的具体解决方案建议。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentApiUrl = 'http://203.135.99.51:10141/v2/server/status?token=info';
+        let testResults = {
+            cors: null,
+            jsonp: null,
+            reachability: null,
+            headers: null
+        };
+
+        function updateApiUrl() {
+            const input = document.getElementById('apiUrl');
+            currentApiUrl = input.value.trim();
+            if (!currentApiUrl) {
+                alert('请输入有效的API地址');
+                return;
+            }
+
+            // 重置所有测试状态
+            resetTestStatus();
+            alert('API地址已更新: ' + currentApiUrl);
+        }
+
+        function resetTestStatus() {
+            const statuses = ['corsStatus', 'jsonpStatus', 'headersStatus', 'reachabilityStatus'];
+            statuses.forEach(id => {
+                document.getElementById(id).className = 'status-indicator status-unknown';
+            });
+
+            testResults = {
+                cors: null,
+                jsonp: null,
+                reachability: null,
+                headers: null
+            };
+
+            updateSummary();
+        }
+
+        async function testCORS() {
+            const resultDiv = document.getElementById('corsResult');
+            const statusIndicator = document.getElementById('corsStatus');
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '⏳ 正在测试CORS支持...';
+
+            try {
+                const response = await fetch(currentApiUrl, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                        <strong>✅ CORS测试成功!</strong><br>
+                        状态码: ${response.status}<br>
+                        数据预览: <br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+
+                statusIndicator.className = 'status-indicator status-success';
+                testResults.cors = true;
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                        <strong>❌ CORS测试失败</strong><br>
+                        错误信息: ${error.message}<br>
+                        <br>
+                        <strong>可能的原因:</strong><br>
+                        • 服务器未设置 Access-Control-Allow-Origin 头<br>
+                        • 服务器拒绝跨域请求<br>
+                        • 网络连接问题<br>
+                        • 服务器不可达
+                    `;
+
+                statusIndicator.className = 'status-indicator status-error';
+                testResults.cors = false;
+            }
+
+            updateSummary();
+        }
+
+        async function testPreflightCORS() {
+            const resultDiv = document.getElementById('corsResult');
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '⏳ 正在测试预检请求...';
+
+            try {
+                const response = await fetch(currentApiUrl, {
+                    method: 'OPTIONS',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Request-Method': 'GET',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                        <strong>✅ 预检请求成功!</strong><br>
+                        状态码: ${response.status}<br>
+                        服务器支持OPTIONS方法
+                    `;
+
+            } catch (error) {
+                resultDiv.className = 'result warning';
+                resultDiv.innerHTML = `
+                        <strong>⚠️ 预检请求失败</strong><br>
+                        错误信息: ${error.message}<br>
+                        这可能意味着服务器不支持OPTIONS方法，但不一定影响GET请求
+                    `;
+            }
+        }
+
+        function testJSONP() {
+            const resultDiv = document.getElementById('jsonpResult');
+            const statusIndicator = document.getElementById('jsonpStatus');
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '⏳ 正在测试JSONP支持...';
+
+            // 创建唯一的回调函数名
+            const callbackName = 'jsonp_test_' + Date.now();
+            let timeoutId;
+
+            // 创建全局回调函数
+            window[callbackName] = function (data) {
+                clearTimeout(timeoutId);
+
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                        <strong>✅ JSONP测试成功!</strong><br>
+                        服务器支持callback参数<br>
+                        数据预览: <br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+
+                statusIndicator.className = 'status-indicator status-success';
+                testResults.jsonp = true;
+
+                // 清理
+                document.head.removeChild(script);
+                delete window[callbackName];
+                updateSummary();
+            };
+
+            // 创建script标签
+            const script = document.createElement('script');
+            script.onerror = function () {
+                clearTimeout(timeoutId);
+
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                        <strong>❌ JSONP测试失败</strong><br>
+                        脚本加载错误<br>
+                        <br>
+                        <strong>可能的原因:</strong><br>
+                        • 服务器不支持callback参数<br>
+                        • 服务器返回的不是有效的JavaScript<br>
+                        • 网络连接问题<br>
+                        • 服务器不可达
+                    `;
+
+                statusIndicator.className = 'status-indicator status-error';
+                testResults.jsonp = false;
+
+                // 清理
+                delete window[callbackName];
+                updateSummary();
+            };
+
+            // 设置超时
+            timeoutId = setTimeout(() => {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                        <strong>❌ JSONP测试超时</strong><br>
+                        请求超时 (10秒)<br>
+                        服务器可能不支持JSONP或响应过慢
+                    `;
+
+                statusIndicator.className = 'status-indicator status-error';
+                testResults.jsonp = false;
+
+                // 清理
+                if (script.parentNode) {
+                    document.head.removeChild(script);
+                }
+                delete window[callbackName];
+                updateSummary();
+            }, 10000);
+
+            // 构建JSONP URL
+            const separator = currentApiUrl.includes('?') ? '&' : '?';
+            script.src = currentApiUrl + separator + 'callback=' + callbackName;
+            document.head.appendChild(script);
+        }
+
+        async function checkHeaders() {
+            const resultDiv = document.getElementById('headersResult');
+            const statusIndicator = document.getElementById('headersStatus');
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '⏳ 正在检查响应头...';
+
+            try {
+                const response = await fetch(currentApiUrl, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+
+                let headersInfo = '<strong>📋 响应头信息:</strong><br><br>';
+
+                // 检查重要的CORS头
+                const corsHeaders = [
+                    'access-control-allow-origin',
+                    'access-control-allow-methods',
+                    'access-control-allow-headers',
+                    'access-control-allow-credentials'
+                ];
+
+                let corsSupported = false;
+                corsHeaders.forEach(header => {
+                    const value = response.headers.get(header);
+                    if (value) {
+                        headersInfo += `✅ ${header}: ${value}<br>`;
+                        corsSupported = true;
+                    } else {
+                        headersInfo += `❌ ${header}: 未设置<br>`;
+                    }
+                });
+
+                headersInfo += '<br><strong>其他响应头:</strong><br>';
+                for (let [key, value] of response.headers.entries()) {
+                    if (!corsHeaders.includes(key.toLowerCase())) {
+                        headersInfo += `• ${key}: ${value}<br>`;
+                    }
+                }
+
+                resultDiv.className = corsSupported ? 'result success' : 'result warning';
+                resultDiv.innerHTML = headersInfo;
+
+                statusIndicator.className = corsSupported ? 'status-indicator status-success' : 'status-indicator status-warning';
+                testResults.headers = corsSupported;
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                        <strong>❌ 无法检查响应头</strong><br>
+                        错误信息: ${error.message}
+                    `;
+
+                statusIndicator.className = 'status-indicator status-error';
+                testResults.headers = false;
+            }
+
+            updateSummary();
+        }
+
+        function testReachability() {
+            const resultDiv = document.getElementById('reachabilityResult');
+            const statusIndicator = document.getElementById('reachabilityStatus');
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '⏳ 正在测试服务器可达性...';
+
+            // 使用图片加载的方式测试连通性
+            const img = new Image();
+            const startTime = Date.now();
+
+            img.onload = function () {
+                const loadTime = Date.now() - startTime;
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                        <strong>✅ 服务器可达</strong><br>
+                        响应时间: ${loadTime}ms<br>
+                        服务器在线且可以响应请求
+                    `;
+
+                statusIndicator.className = 'status-indicator status-success';
+                testResults.reachability = true;
+                updateSummary();
+            };
+
+            img.onerror = function () {
+                // 图片加载失败不一定意味着服务器不可达
+                // 尝试使用fetch no-cors模式
+                fetch(currentApiUrl, { mode: 'no-cors' })
+                    .then(() => {
+                        resultDiv.className = 'result warning';
+                        resultDiv.innerHTML = `
+                                <strong>⚠️ 服务器可达但有限制</strong><br>
+                                服务器可以响应请求，但可能不支持跨域访问<br>
+                                这通常意味着需要配置CORS或使用JSONP
+                            `;
+
+                        statusIndicator.className = 'status-indicator status-warning';
+                        testResults.reachability = 'limited';
+                    })
+                    .catch(() => {
+                        resultDiv.className = 'result error';
+                        resultDiv.innerHTML = `
+                                <strong>❌ 服务器不可达</strong><br>
+                                无法连接到服务器<br>
+                                请检查服务器地址和网络连接
+                            `;
+
+                        statusIndicator.className = 'status-indicator status-error';
+                        testResults.reachability = false;
+                    })
+                    .finally(() => {
+                        updateSummary();
+                    });
+            };
+
+            // 尝试加载favicon或其他资源
+            const url = new URL(currentApiUrl);
+            img.src = `${url.protocol}//${url.host}/favicon.ico?_t=${Date.now()}`;
+        }
+
+        function updateSummary() {
+            // 更新测试总结
+            document.getElementById('corsSummary').innerHTML =
+                testResults.cors === null ? '❓ 未测试' :
+                    testResults.cors ? '✅ 支持' : '❌ 不支持';
+
+            document.getElementById('jsonpSummary').innerHTML =
+                testResults.jsonp === null ? '❓ 未测试' :
+                    testResults.jsonp ? '✅ 支持' : '❌ 不支持';
+
+            document.getElementById('reachabilitySummary').innerHTML =
+                testResults.reachability === null ? '❓ 未测试' :
+                    testResults.reachability === true ? '✅ 可达' :
+                        testResults.reachability === 'limited' ? '⚠️ 有限制' : '❌ 不可达';
+
+            // 生成建议
+            generateRecommendations();
+        }
+
+        function generateRecommendations() {
+            const suggestionsDiv = document.getElementById('solutionSuggestions');
+            const recommendationSummary = document.getElementById('recommendationSummary');
+
+            let recommendations = '';
+            let summary = '';
+
+            if (testResults.cors === true) {
+                summary = '✅ 可直接使用CORS';
+                recommendations = `
+                        <div class="code-block">
+                            <strong>🎉 恭喜！你的API已经支持CORS跨域访问</strong><br><br>
+                            可以直接在前端使用 fetch 请求：<br><br>
+                            fetch('${currentApiUrl}')<br>
+                            &nbsp;&nbsp;.then(response => response.json())<br>
+                            &nbsp;&nbsp;.then(data => console.log(data));
+                        </div>
+                    `;
+            } else if (testResults.jsonp === true) {
+                summary = '✅ 可使用JSONP';
+                recommendations = `
+                        <div class="code-block">
+                            <strong>🎉 你的API支持JSONP跨域访问</strong><br><br>
+                            使用JSONP方式请求：<br><br>
+                            function loadData(callback) {<br>
+                            &nbsp;&nbsp;const script = document.createElement('script');<br>
+                            &nbsp;&nbsp;script.src = '${currentApiUrl}&callback=' + callback;<br>
+                            &nbsp;&nbsp;document.head.appendChild(script);<br>
+                            }
+                        </div>
+                    `;
+            } else if (testResults.reachability === false) {
+                summary = '❌ 服务器不可达';
+                recommendations = `
+                        <div class="result error">
+                            <strong>❌ 服务器连接问题</strong><br><br>
+                            请检查：<br>
+                            • 服务器地址是否正确<br>
+                            • 服务器是否正在运行<br>
+                            • 防火墙是否阻止了连接<br>
+                            • 网络连接是否正常
+                        </div>
+                    `;
+            } else {
+                summary = '🔧 需要配置跨域';
+                recommendations = `
+                        <div class="result warning">
+                            <strong>🔧 需要解决跨域问题</strong><br><br>
+
+                            <strong>方案1：修改服务器支持CORS</strong><br>
+                            在服务器响应中添加以下头：<br>
+                            <div class="code-block">
+                                Access-Control-Allow-Origin: *<br>
+                                Access-Control-Allow-Methods: GET, POST, OPTIONS<br>
+                                Access-Control-Allow-Headers: Content-Type
+                            </div>
+
+                            <strong>方案2：添加JSONP支持</strong><br>
+                            让服务器支持callback参数，返回格式：<br>
+                            <div class="code-block">
+                                callbackName({json数据})
+                            </div>
+
+                            <strong>方案3：使用代理服务器</strong><br>
+                            部署一个代理服务（如Vercel函数）来转发请求<br><br>
+
+                            <strong>方案4：编写TShock插件</strong><br>
+                            如果这是TShock服务器，可以写插件直接支持CORS/JSONP
+                        </div>
+                    `;
+            }
+
+            suggestionsDiv.innerHTML = recommendations;
+            recommendationSummary.innerHTML = summary;
+        }
+
+        // 页面加载时的初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            updateSummary();
+        });
+    </script>
+</body>
+</html>
