@@ -3,26 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terraria服务器状态</title>
+    <title>Terraria服务器状态 - 调试版</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
-        }
-
-        .status-card {
-            background: white;
-            max-width: 400px;
+            max-width: 900px;
             margin: 20px auto;
             padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            background: white;
             border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .status-item {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
+            padding: 8px 0;
             border-bottom: 1px solid #eee;
         }
 
@@ -32,71 +38,228 @@
 
         .label {
             font-weight: bold;
+            color: #555;
         }
 
-        .refresh-btn {
+        .value {
+            color: #333;
+        }
+
+        .debug-section pre {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        button {
             background: #4CAF50;
             color: white;
             border: none;
             padding: 10px 20px;
-            margin-top: 20px;
+            border-radius: 4px;
             cursor: pointer;
         }
 
+            button:hover {
+                background: #45a049;
+            }
+
         .error {
             color: red;
+            font-weight: bold;
         }
 
         .loading {
+            text-align: center;
             color: #666;
+            font-style: italic;
+        }
+
+        .toggle-btn {
+            background: #2196F3;
+        }
+
+            .toggle-btn:hover {
+                background: #0b7dda;
+            }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
         }
     </style>
 </head>
 <body>
-    <div class="status-card">
-        <h2>Terraria服务器状态</h2>
+    <div class="header">
+        <h1>Terraria服务器状态调试工具</h1>
+        <p>用于测试API接口并查看详细响应数据</p>
+    </div>
 
+    <div class="section">
+        <h2>服务器状态</h2>
         <div id="status-content">
-            <div class="loading">正在加载...</div>
+            <div class="loading">正在加载服务器状态...</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>调试工具</h2>
+        <div class="btn-group">
+            <button id="refresh-btn" onclick="loadServerStatus()">刷新状态</button>
+            <button id="toggle-debug" onclick="toggleDebug()">显示/隐藏调试信息</button>
+            <button id="clear-logs" onclick="clearLogs()">清除日志</button>
         </div>
 
-        <button class="refresh-btn" onclick="loadServerStatus()">刷新</button>
+        <div id="debug-container" style="display: none;">
+            <h3>API请求详情</h3>
+            <div class="debug-section">
+                <pre id="request-log"></pre>
+            </div>
+
+            <h3>API响应数据</h3>
+            <div class="debug-section">
+                <pre id="response-log"></pre>
+            </div>
+
+            <h3>控制台日志</h3>
+            <div class="debug-section">
+                <pre id="console-log"></pre>
+            </div>
+        </div>
     </div>
 
     <script>
-        const API_URL = 'http://203.135.99.51:10141/test'; // 修改为你的API地址
+        // 修改为你的API地址
+        const API_URL = 'http://203.135.99.51:10141/test';
+
+        // 日志存储
+        const logs = [];
 
         function loadServerStatus() {
-            const content = document.getElementById('status-content');
-            content.innerHTML = '<div class="loading">正在加载...</div>';
+            const statusContent = document.getElementById('status-content');
+            const requestLog = document.getElementById('request-log');
+            const responseLog = document.getElementById('response-log');
 
-            fetch(API_URL)
+            // 显示加载状态
+            statusContent.innerHTML = '<div class="loading">正在加载服务器状态...</div>';
+            requestLog.textContent = '准备发送请求...';
+
+            // 记录请求开始
+            const requestStart = new Date();
+            logMessage(`[${formatTime(requestStart)}] 发送API请求: ${API_URL}`);
+
+            // 发送请求
+            fetch(API_URL, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
                 .then(response => {
+                    // 记录请求响应
+                    const requestEnd = new Date();
+                    const duration = requestEnd - requestStart;
+
+                    logMessage(`[${formatTime(requestEnd)}] 请求完成 - 状态码: ${response.status} (耗时: ${duration}ms)`);
+                    requestLog.textContent = `请求URL: ${API_URL}\n请求方法: GET\n响应状态: ${response.status}\n耗时: ${duration}ms`;
+
                     if (!response.ok) {
-                        throw new Error('网络响应错误');
+                        throw new Error(`HTTP错误! 状态码: ${response.status}`);
                     }
+
                     return response.json();
                 })
                 .then(data => {
-                    if (data.status === "200") {
-                        content.innerHTML = `
-                                <div class="status-item">
-                                    <span class="label">在线玩家:</span>
-                                    <span class="value">${data.playercount}/${data.maxplayers}</span>
-                                </div>
-                                <div class="status-item">
-                                    <span class="label">状态消息:</span>
-                                    <span class="value">${data.message}</span>
-                                </div>
-                            `;
-                    } else {
-                        content.innerHTML = `<div class="error">服务器返回错误: ${data.error || '未知错误'}</div>`;
-                    }
+                    // 处理成功响应
+                    const responseEnd = new Date();
+                    logMessage(`[${formatTime(responseEnd)}] 数据解析成功`);
+
+                    // 显示状态数据
+                    displayStatus(data);
+
+                    // 显示响应数据
+                    responseLog.textContent = JSON.stringify(data, null, 2);
                 })
                 .catch(error => {
-                    console.error('请求错误:', error);
-                    content.innerHTML = `<div class="error">无法连接到服务器: ${error.message}</div>`;
+                    // 处理错误
+                    const errorTime = new Date();
+                    logMessage(`[${formatTime(errorTime)}] 错误: ${error.message}`);
+
+                    statusContent.innerHTML = `<div class="error">获取服务器状态失败: ${error.message}</div>`;
+                    responseLog.textContent = `错误: ${error.message}`;
                 });
+        }
+
+        function displayStatus(data) {
+            const content = document.getElementById('status-content');
+
+            if (data.status === "200") {
+                content.innerHTML = `
+                        <div class="status-item">
+                            <span class="label">在线玩家:</span>
+                            <span class="value">${data.playercount || 0}/${data.maxplayers || '?'}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">状态消息:</span>
+                            <span class="value">${data.message || '无状态消息'}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">响应状态:</span>
+                            <span class="value"><span class="highlight">成功</span></span>
+                        </div>
+                    `;
+            } else {
+                content.innerHTML = `
+                        <div class="status-item">
+                            <span class="label">响应状态:</span>
+                            <span class="value"><span class="highlight error">失败</span></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">错误信息:</span>
+                            <span class="value">${data.error || '未知错误'}</span>
+                        </div>
+                    `;
+            }
+        }
+
+        function toggleDebug() {
+            const debugContainer = document.getElementById('debug-container');
+            const toggleBtn = document.getElementById('toggle-debug');
+
+            if (debugContainer.style.display === 'none') {
+                debugContainer.style.display = 'block';
+                toggleBtn.textContent = '隐藏调试信息';
+            } else {
+                debugContainer.style.display = 'none';
+                toggleBtn.textContent = '显示调试信息';
+            }
+        }
+
+        function clearLogs() {
+            logs.length = 0;
+            document.getElementById('console-log').textContent = '';
+            logMessage('日志已清除');
+        }
+
+        function logMessage(message) {
+            logs.push(message);
+            document.getElementById('console-log').textContent = logs.join('\n');
+            console.log(message); // 同时输出到浏览器控制台
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString() + '.' + date.getMilliseconds().toString().padStart(3, '0');
         }
 
         // 页面加载时自动获取状态
