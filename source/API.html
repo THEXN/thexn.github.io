@@ -1,222 +1,624 @@
----
-layout: true
----
-
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terraria服务器状态测试</title>
+    <title>ARK服务器列表</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
+            background: #f8f9fa;
             padding: 20px;
-        }
-
-        .section {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .status-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-            .status-item:last-child {
-                border-bottom: none;
-            }
-
-        .label {
-            font-weight: bold;
-            color: #555;
-            min-width: 120px;
-        }
-
-        .value {
             color: #333;
         }
 
-        .highlight {
-            background: #fff3cd;
-            padding: 2px 4px;
-            border-radius: 3px;
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
         }
 
-        button {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
+            .header h1 {
+                color: #212529;
+                margin-bottom: 10px;
+            }
+
+            .header p {
+                color: #6c757d;
+                font-size: 0.95em;
+            }
+
+        .servers-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
         }
 
-        .error {
-            color: red;
+        .server-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+            .server-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            }
+
+        .server-header {
+            padding: 12px 15px;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .server-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #212529;
+        }
+
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #dc3545;
+        }
+
+            .status-dot.online {
+                background: #28a745;
+            }
+
+        .status-text {
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .server-info {
+            padding: 12px 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+            .info-row:last-child {
+                border-bottom: none;
+            }
+
+        .info-label {
+            font-size: 0.8em;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: 0.9em;
+            color: #212529;
+            font-weight: normal;
+        }
+
+        .players-info {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .player-count {
+            color: #28a745;
             font-weight: bold;
         }
+
+        .player-divider {
+            color: #adb5bd;
+        }
+
+        .player-max {
+            color: #6c757d;
+        }
+
+        .server-intro {
+            padding: 10px 15px;
+            background: #f8f9fa;
+            font-size: 0.85em;
+            color: #495057;
+            line-height: 1.4;
+            display: none;
+        }
+
+        .intro-toggle {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-top: 10px;
+            display: block;
+            text-align: center;
+        }
+
+        .refresh-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+            .refresh-btn:hover {
+                background: #0056b3;
+            }
+
+            .refresh-btn:disabled {
+                background: #6c757d;
+                cursor: not-allowed;
+            }
+
+        .copy-ip-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.7em;
+            margin-left: 5px;
+        }
+
+            .copy-ip-btn:hover {
+                background: #5a6268;
+            }
 
         .loading {
             text-align: center;
-            color: #666;
-            font-style: italic;
+            padding: 20px;
+            font-size: 0.9em;
+            color: #6c757d;
         }
 
-        .debug {
-            margin-top: 20px;
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
             padding: 15px;
-            background: #f8f8f8;
             border-radius: 4px;
+            margin: 15px 0;
+            text-align: center;
+            display: none;
         }
 
-        .debug-title {
-            font-weight: bold;
-            margin-bottom: 5px;
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.85em;
+        }
+
+        @media (max-width: 576px) {
+            .servers-container {
+                grid-template-columns: 1fr;
+            }
+
+            .server-card {
+                margin-bottom: 10px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="section">
-        <h2>Terraria服务器状态</h2>
-
-        <div id="status-content">
-            <div class="loading">正在加载服务器状态...</div>
-        </div>
-
-        <button onclick="loadServerStatus()">刷新状态</button>
+    <div class="header">
+        <h1>ARK服务器列表</h1>
+        <p>实时监控多台ARK服务器状态，支持快速查看服务器信息</p>
     </div>
 
-    <div class="section debug">
-        <div class="debug-title">调试信息</div>
-        <pre id="debug-content"></pre>
+    <div class="servers-container" id="servers-container">
+        <div class="loading" id="loading">正在加载服务器数据...</div>
+        <div class="error-message" id="error-message">
+            <strong>加载失败:</strong> <span id="error-text">无法连接到服务器</span>
+        </div>
+    </div>
+
+    <div class="footer">
+        最后更新: <span id="update-time">--:--:--</span>
     </div>
 
     <script>
-        // API地址 - 修改为你的实际地址
-        const API_URL = 'http://203.135.99.51:10141/v2/server/status/';
+        const monitor = {
+            // 服务器API配置
+            apiConfig: {
+                baseUrl: 'http://203.135.99.51:10141/v2/server',
+                endpoints: {
+                    status: '/status?token=info'
+                },
+                proxies: [
+                    'https://corsproxy.io/?',
+                    'https://api.allorigins.win/raw?url='
+                ],
+                currentProxyIndex: 0
+            },
 
-        // JSONP代理服务 - 用于绕过跨域限制
-        const JSONP_PROXY = 'https://jsonp.afeld.me/?url=';
-
-        // 调试日志
-        function debugLog(message) {
-            const debugContent = document.getElementById('debug-content');
-            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
-            debugContent.textContent += `[${timestamp}] ${message}\n`;
-            debugContent.scrollTop = debugContent.scrollHeight;
-            console.log(`[DEBUG] ${message}`);
-        }
-
-        function loadServerStatus() {
-            const content = document.getElementById('status-content');
-            content.innerHTML = '<div class="loading">正在加载服务器状态...</div>';
-            debugLog(`开始请求: ${API_URL}`);
-
-            const script = document.createElement('script');
-            const callbackName = `jsonpCallback${Date.now()}`;
-
-            window[callbackName] = function (data) {
-                try {
-                    debugLog('收到API响应');
-                    debugLog(JSON.stringify(data, null, 2));
-
-                    if (data && data.status === "200") {
-                        displayStatus(data);
-                        debugLog('数据显示成功');
-                    } else {
-                        content.innerHTML = `<div class="error">服务器返回错误: ${data.error || '未知错误'}</div>`;
-                        debugLog(`错误: 服务器返回非200状态码 - ${data.status}`);
-                    }
-                } catch (error) {
-                    content.innerHTML = `<div class="error">解析数据失败: ${error.message}</div>`;
-                    debugLog(`错误: 数据解析失败 - ${error.message}`);
-                    console.error('数据解析错误:', error);
-                } finally {
-                    // 清理
-                    delete window[callbackName];
-                    document.body.removeChild(script);
+            // 服务器列表
+            servers: [
+                {
+                    id: 1,
+                    name: "ARK开荒服务器",
+                    ip: "ark.niaoluo.top", // 作为开发者填写的IP
+                    port: 7776,
+                    intro: "这是我们的主要开荒服务器,欢迎新老玩家加入！"
                 }
-            };
+            ],
 
-            // 构建JSONP请求URL
-            const jsonpUrl = `${JSONP_PROXY}${encodeURIComponent(API_URL)}&callback=${callbackName}`;
-            debugLog(`JSONP请求URL: ${jsonpUrl}`);
+            // 错误和重试配置
+            errorState: {
+                isError: false,
+                message: '',
+                retryCount: 0,
+                maxRetries: 3
+            },
 
-            script.src = jsonpUrl;
+            init() {
+                this.fetchAllServers();
+                this.setupRefresh();
+            },
 
-            script.onerror = function () {
-                content.innerHTML = '<div class="error">无法连接到服务器</div>';
-                debugLog('错误: 无法加载服务器状态 (script加载失败)');
-                delete window[callbackName];
-                document.body.removeChild(script);
-            };
+            fetchAllServers() {
+                this.showLoading();
+                this.hideError();
 
-            document.body.appendChild(script);
-        }
+                // 重置错误状态
+                this.errorState = {
+                    isError: false,
+                    message: '',
+                    retryCount: 0,
+                    maxRetries: 3
+                };
 
-        function displayStatus(data) {
-            const content = document.getElementById('status-content');
+                // 对每台服务器发送请求
+                const promises = this.servers.map(server => {
+                    return this.fetchServerData(server)
+                        .then(data => {
+                            return { ...server, ...data };
+                        })
+                        .catch(error => {
+                            console.error(`获取服务器 ${server.name} 数据失败:`, error);
+                            return { ...server, online: false, error: error.message };
+                        });
+                });
 
-            content.innerHTML = `
-                    <div class="status-item">
-                        <span class="label">服务器状态:</span>
-                        <span class="value"><span class="highlight">${data.status === "200" ? "正常" : "异常"}</span></span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">服务器名称:</span>
-                        <span class="value">${data.name || '未设置'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">游戏版本:</span>
-                        <span class="value">${data.serverversion || '未知'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">TShock版本:</span>
-                        <span class="value">${data.tshockversion || '未知'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">服务器端口:</span>
-                        <span class="value">${data.port || '未知'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">在线玩家:</span>
-                        <span class="value">${data.playercount || 0}/${data.maxplayers || '?'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">世界名称:</span>
-                        <span class="value">${data.world || '未设置'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">运行时间:</span>
-                        <span class="value">${data.uptime || '未知'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">服务器密码:</span>
-                        <span class="value">${data.serverpassword ? '已设置' : '未设置'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">更新时间:</span>
-                        <span class="value">${new Date().toLocaleTimeString()}</span>
-                    </div>
-                `;
-        }
+                // 处理所有请求结果
+                Promise.all(promises)
+                    .then(servers => {
+                        this.renderServers(servers);
+                        this.updateFooterTime();
+                    })
+                    .catch(error => {
+                        console.error('获取服务器数据失败:', error);
+                        this.showError('获取所有服务器数据失败');
+                    });
+            },
 
-        // 页面加载时自动获取状态
-        window.onload = loadServerStatus;
+            fetchServerData(server) {
+                return new Promise((resolve, reject) => {
+                    this.errorState.retryCount = 0;
+                    this.attemptFetch(server, resolve, reject);
+                });
+            },
 
-        // 每30秒自动刷新一次
-        setInterval(loadServerStatus, 30000);
+            attemptFetch(server, resolve, reject) {
+                this.errorState.retryCount++;
+
+                // 循环使用代理
+                this.apiConfig.currentProxyIndex = (this.apiConfig.currentProxyIndex + 1) % this.apiConfig.proxies.length;
+                const proxy = this.apiConfig.proxies[this.apiConfig.currentProxyIndex];
+                const fullUrl = proxy + encodeURIComponent(`${this.apiConfig.baseUrl}${this.apiConfig.endpoints.status}`);
+
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 8000);
+
+                fetch(fullUrl, { signal: controller.signal })
+                    .then(response => {
+                        clearTimeout(timeout);
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP错误 ${response.status}`);
+                        }
+
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === "200") {
+                            // 处理API返回的数据
+                            const processedData = this.processServerData(data);
+                            resolve(processedData);
+                        } else {
+                            throw new Error(`API返回异常状态: ${data.status}`);
+                        }
+                    })
+                    .catch(error => {
+                        clearTimeout(timeout);
+
+                        if (this.errorState.retryCount < this.errorState.maxRetries) {
+                            // 重试
+                            const delay = Math.pow(2, this.errorState.retryCount) * 500;
+                            console.log(`服务器 ${server.name} 请求失败，尝试第 ${this.errorState.retryCount + 1} 次重试...`);
+                            setTimeout(() => this.attemptFetch(server, resolve, reject), delay);
+                        } else {
+                            reject(new Error(`尝试 ${this.errorState.maxRetries} 次后仍失败: ${error.message}`));
+                        }
+                    });
+            },
+
+            processServerData(data) {
+                return {
+                    online: true,
+                    version: data.serverversion,
+                    playercount: data.playercount,
+                    maxplayers: data.maxplayers,
+                    uptime: data.uptime,
+                    // 不处理password字段，不在UI中显示
+                };
+            },
+
+            renderServers(servers) {
+                const container = document.getElementById('servers-container');
+                container.innerHTML = '';
+
+                if (servers.length === 0) {
+                    container.innerHTML = '<div class="loading">暂无服务器数据</div>';
+                    return;
+                }
+
+                servers.forEach(server => {
+                    const card = this.createServerCard(server);
+                    container.appendChild(card);
+                });
+
+                // 隐藏加载提示
+                document.getElementById('loading').style.display = 'none';
+            },
+
+            createServerCard(server) {
+                const card = document.createElement('div');
+                card.className = 'server-card';
+
+                card.innerHTML = `
+                        <div class="server-header">
+                            <div class="server-name">${server.name}</div>
+                            <div class="server-status">
+                                <div class="status-dot ${server.online ? 'online' : ''}"></div>
+                                <span class="status-text">${server.online ? '在线' : '离线'}</span>
+                            </div>
+                        </div>
+                        <div class="server-info">
+                            <div class="info-row">
+                                <div class="info-label">版本</div>
+                                <div class="info-value">${server.version || '未知'}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">IP地址</div>
+                                <div class="info-value">
+                                    <span id="ip-value-${server.id}">${server.ip}</span>
+                                    <button class="copy-ip-btn" data-id="${server.id}">复制IP</button>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">端口</div>
+                                <div class="info-value">${server.port}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">在线玩家</div>
+                                <div class="players-info">
+                                    <span class="player-count">${server.online ? server.playercount : '0'}</span>
+                                    <span class="player-divider">/</span>
+                                    <span class="player-max">${server.online ? server.maxplayers : '0'}</span>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">运行时间</div>
+                                <div class="info-value">${server.online ? this.formatUptime(server.uptime) : '未知'}</div>
+                            </div>
+                            ${server.error ? `<div class="info-row error-row">
+                                <div class="info-label">错误</div>
+                                <div class="info-value error-value">${server.error}</div>
+                            </div>` : ''}
+                        </div>
+                        <div class="server-intro" id="intro-${server.id}">
+                            ${server.intro || '暂无介绍'}
+                        </div>
+                        <button class="intro-toggle" data-id="${server.id}">
+                            ${server.intro ? '隐藏介绍' : '显示介绍'}
+                        </button>
+                        <button class="refresh-btn" data-id="${server.id}">刷新状态</button>
+                    `;
+
+                // 绑定事件
+                card.querySelector('.intro-toggle').addEventListener('click', (e) => {
+                    this.toggleIntroduction(e);
+                });
+
+                card.querySelector('.refresh-btn').addEventListener('click', (e) => {
+                    this.refreshServerStatus(e);
+                });
+
+                card.querySelector('.copy-ip-btn').addEventListener('click', (e) => {
+                    this.copyIpAddress(e);
+                });
+
+                return card;
+            },
+
+            toggleIntroduction(e) {
+                const id = e.target.getAttribute('data-id');
+                const intro = document.getElementById(`intro-${id}`);
+                const button = e.target;
+
+                intro.style.display = intro.style.display === 'block' ? 'none' : 'block';
+                button.textContent = intro.style.display === 'block' ? '隐藏介绍' : '显示介绍';
+            },
+
+            refreshServerStatus(e) {
+                const id = e.target.getAttribute('data-id');
+                const button = e.target;
+                const serverIndex = this.servers.findIndex(s => s.id == id);
+
+                if (serverIndex === -1) {
+                    return;
+                }
+
+                // 禁用按钮
+                button.disabled = true;
+                button.textContent = '刷新中...';
+
+                // 获取单个服务器数据
+                this.fetchServerData(this.servers[serverIndex])
+                    .then(data => {
+                        // 更新服务器数据
+                        this.servers[serverIndex] = { ...this.servers[serverIndex], ...data };
+
+                        // 重新渲染服务器卡片
+                        const container = document.getElementById('servers-container');
+                        const cards = container.querySelectorAll('.server-card');
+
+                        if (cards.length > serverIndex) {
+                            const newCard = this.createServerCard(this.servers[serverIndex]);
+                            container.replaceChild(newCard, cards[serverIndex]);
+                        }
+
+                        this.updateFooterTime();
+                    })
+                    .catch(error => {
+                        console.error('刷新服务器失败:', error);
+                        // 显示错误信息
+                        const serverCard = button.closest('.server-card');
+                        const errorRow = serverCard.querySelector('.error-row');
+
+                        if (errorRow) {
+                            errorRow.querySelector('.error-value').textContent = error.message;
+                        } else {
+                            const infoRow = document.createElement('div');
+                            infoRow.className = 'info-row error-row';
+                            infoRow.innerHTML = `
+                                    <div class="info-label">错误</div>
+                                    <div class="info-value error-value">${error.message}</div>
+                                `;
+
+                            const serverInfo = serverCard.querySelector('.server-info');
+                            serverInfo.appendChild(infoRow);
+                        }
+                    })
+                    .finally(() => {
+                        // 启用按钮
+                        button.disabled = false;
+                        button.textContent = '刷新状态';
+                    });
+            },
+
+            copyIpAddress(e) {
+                const id = e.target.getAttribute('data-id');
+                const button = e.target;
+                const serverIndex = this.servers.findIndex(s => s.id == id);
+
+                if (serverIndex === -1) {
+                    return;
+                }
+
+                const server = this.servers[serverIndex];
+                const ip = document.getElementById(`ip-value-${id}`).textContent;
+
+                // 复制IP到剪贴板
+                navigator.clipboard.writeText(ip)
+                    .then(() => {
+                        // 提示复制成功
+                        const originalText = button.textContent;
+                        button.textContent = '复制成功!';
+                        setTimeout(() => {
+                            button.textContent = originalText;
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('复制IP失败:', err);
+                        alert('复制IP失败，请手动复制');
+                    });
+            },
+
+            formatUptime(uptime) {
+                const parts = uptime.split('.');
+                if (parts.length === 2) {
+                    const days = parseInt(parts[0]);
+                    const timeParts = parts[1].split(':');
+                    if (timeParts.length === 3) {
+                        const hours = parseInt(timeParts[0]);
+                        const minutes = parseInt(timeParts[1]);
+                        const seconds = parseInt(timeParts[2]);
+
+                        let result = '';
+                        if (days > 0) result += `${days}天 `;
+                        if (hours > 0) result += `${hours}时 `;
+                        result += `${minutes}分 ${seconds}秒`;
+
+                        return result;
+                    }
+                }
+                return uptime;
+            },
+
+            setupRefresh() {
+                // 每30秒自动刷新所有服务器状态
+                setInterval(() => {
+                    this.fetchAllServers();
+                }, 30000);
+            },
+
+            showLoading() {
+                document.getElementById('loading').style.display = 'block';
+            },
+
+            hideLoading() {
+                document.getElementById('loading').style.display = 'none';
+            },
+
+            showError(message) {
+                const errorElement = document.getElementById('error-message');
+                document.getElementById('error-text').textContent = message;
+                errorElement.style.display = 'block';
+                this.hideLoading();
+            },
+
+            hideError() {
+                document.getElementById('error-message').style.display = 'none';
+            },
+
+            updateFooterTime() {
+                const timeString = new Date().toLocaleTimeString();
+                document.getElementById('update-time').textContent = timeString;
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => monitor.init());
     </script>
 </body>
 </html>
