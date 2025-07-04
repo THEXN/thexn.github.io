@@ -1,3 +1,7 @@
+---
+title: ARK服务器
+---
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -414,54 +418,54 @@
                 card.className = 'server-card';
 
                 card.innerHTML = `
-                            <div class="server-header">
-                                <div class="server-name">${server.name}</div>
-                                <div class="server-status">
-                                    <div class="status-dot ${server.online ? 'online' : ''}"></div>
-                                    <span class="status-text">${server.online ? '在线' : '离线'}</span>
-                                </div>
-                            </div>
-                            <div class="server-info">
-                                <div class="info-row">
-                                    <div class="info-label">版本</div>
-                                    <div class="info-value">${server.version || '未知'}</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="info-label">IP地址</div>
-                                    <div class="info-value">
-                                        <span id="ip-value-${server.id}">${server.ip}</span>
-                                        <button class="copy-ip-btn" data-id="${server.id}">复制IP</button>
+                                <div class="server-header">
+                                    <div class="server-name">${server.name}</div>
+                                    <div class="server-status">
+                                        <div class="status-dot ${server.online ? 'online' : ''}"></div>
+                                        <span class="status-text">${server.online ? '在线' : '离线'}</span>
                                     </div>
                                 </div>
-                                <div class="info-row">
-                                    <div class="info-label">端口</div>
-                                    <div class="info-value">${server.port}</div>
-                                </div>
-                                <div class="info-row">
-                                    <div class="info-label">在线玩家</div>
-                                    <div class="players-info">
-                                        <span class="player-count">${server.online ? server.playercount : '0'}</span>
-                                        <span class="player-divider">/</span>
-                                        <span class="player-max">${server.online ? server.maxplayers : '0'}</span>
+                                <div class="server-info">
+                                    <div class="info-row">
+                                        <div class="info-label">版本</div>
+                                        <div class="info-value">${server.version || '未知'}</div>
                                     </div>
+                                    <div class="info-row">
+                                        <div class="info-label">IP地址</div>
+                                        <div class="info-value">
+                                            <span id="ip-value-${server.id}">${server.ip}</span>
+                                            <button class="copy-ip-btn" data-id="${server.id}">复制IP</button>
+                                        </div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">端口</div>
+                                        <div class="info-value">${server.port}</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">在线玩家</div>
+                                        <div class="players-info">
+                                            <span class="player-count">${server.online ? server.playercount : '0'}</span>
+                                            <span class="player-divider">/</span>
+                                            <span class="player-max">${server.online ? server.maxplayers : '0'}</span>
+                                        </div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">运行时间</div>
+                                        <div class="info-value">${server.online ? this.formatUptime(server.uptime) : '未知'}</div>
+                                    </div>
+                                    ${server.error ? `<div class="info-row error-row">
+                                        <div class="info-label">错误</div>
+                                        <div class="info-value error-value">${server.error}</div>
+                                    </div>` : ''}
                                 </div>
-                                <div class="info-row">
-                                    <div class="info-label">运行时间</div>
-                                    <div class="info-value">${server.online ? this.formatUptime(server.uptime) : '未知'}</div>
+                                <div class="server-intro" id="intro-${server.id}">
+                                    ${server.intro || '暂无介绍'}
                                 </div>
-                                ${server.error ? `<div class="info-row error-row">
-                                    <div class="info-label">错误</div>
-                                    <div class="info-value error-value">${server.error}</div>
-                                </div>` : ''}
-                            </div>
-                            <div class="server-intro" id="intro-${server.id}">
-                                ${server.intro || '暂无介绍'}
-                            </div>
-                            <button class="intro-toggle" data-id="${server.id}">
-                                ${server.intro ? '隐藏介绍' : '显示介绍'}
-                            </button>
-                            <button class="refresh-btn" data-id="${server.id}">刷新状态</button>
-                        `;
+                                <button class="intro-toggle" data-id="${server.id}">
+                                    ${server.intro ? '隐藏介绍' : '显示介绍'}
+                                </button>
+                                <button class="refresh-btn" data-id="${server.id}">刷新状态</button>
+                            `;
 
                 // 绑定事件
                 card.querySelector('.intro-toggle').addEventListener('click', (e) => {
@@ -530,9 +534,9 @@
                             const infoRow = document.createElement('div');
                             infoRow.className = 'info-row error-row';
                             infoRow.innerHTML = `
-                                        <div class="info-label">错误</div>
-                                        <div class="info-value error-value">${error.message}</div>
-                                    `;
+                                            <div class="info-label">错误</div>
+                                            <div class="info-value error-value">${error.message}</div>
+                                        `;
 
                             const serverInfo = serverCard.querySelector('.server-info');
                             serverInfo.appendChild(infoRow);
