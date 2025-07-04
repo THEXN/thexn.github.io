@@ -254,7 +254,6 @@ title: ARK服务器
             // 通用API配置
             apiConfig: {
                 proxies: [
-                    'https://corsproxy.io/?',
                     'https://api.allorigins.win/raw?url='
                 ],
                 currentProxyIndex: 0
@@ -288,6 +287,25 @@ title: ARK服务器
                     apiBaseUrl: "http://103.239.245.225:17775/v2/server", // 服务器2的API地址
                     apiEndpoint: "/status?token=info",
                     intro: "保留全原版玩法的开荒服（定期有建筑狂欢）"
+                },
+                {
+                    id: 4,
+                    name: "饥饿游戏",
+                    ip: "hg.niaoluo.top",
+                    port: 7776,
+                    apiBaseUrl: "http://106.53.207.112:7779/v2/server", // 服务器2的API地址
+                    apiEndpoint: "/status?token=info",
+                    intro: "搜索，交战，活到最后"
+                },
+                
+                {
+                    id: 5,
+                    name: "spvp与烫手山芋",
+                    ip: "game.niaoluo.top",
+                    port: 7775,
+                    apiBaseUrl: "http://106.53.207.112:7774/v2/server", // 服务器2的API地址
+                    apiEndpoint: "/status?token=info",
+                    intro: "选择预设好的角色，进入地图交战。以及烫手山芋玩法"
                 }
                 
             ],
