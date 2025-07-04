@@ -2,221 +2,54 @@
 layout: true
 ---
 
-
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terraria服务器状态测试</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-        }
-
-        .section {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .status-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-            .status-item:last-child {
-                border-bottom: none;
-            }
-
-        .label {
-            font-weight: bold;
-            color: #555;
-            min-width: 120px;
-        }
-
-        .value {
-            color: #333;
-        }
-
-        .highlight {
-            background: #fff3cd;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-
-        button {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .error {
-            color: red;
-            font-weight: bold;
-        }
-
-        .loading {
-            text-align: center;
-            color: #666;
-            font-style: italic;
-        }
-
-        .debug {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f8f8;
-            border-radius: 4px;
-        }
-
-        .debug-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-    </style>
+    <title>服务器状态查询</title>
 </head>
 <body>
-    <div class="section">
-        <h2>Terraria服务器状态</h2>
-
-        <div id="status-content">
-            <div class="loading">正在加载服务器状态...</div>
-        </div>
-
-        <button onclick="loadServerStatus()">刷新状态</button>
-    </div>
-
-    <div class="section debug">
-        <div class="debug-title">调试信息</div>
-        <pre id="debug-content"></pre>
-    </div>
+    <h3>ARK开荒服务器状态</h3>
+    <pre id="serverInfo"></pre>
 
     <script>
-        // API地址 - 修改为你的实际地址
-        const API_URL = 'http://203.135.99.51:10141/v2/server/status/';
-
-        // JSONP代理服务 - 用于绕过跨域限制
-        const JSONP_PROXY = 'https://jsonp.afeld.me/?url=';
-
-        // 调试日志
-        function debugLog(message) {
-            const debugContent = document.getElementById('debug-content');
-            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
-            debugContent.textContent += `[${timestamp}] ${message}\n`;
-            debugContent.scrollTop = debugContent.scrollHeight;
-            console.log(`[DEBUG] ${message}`);
+        // 定义回调函数，用于处理返回的数据
+        function handleServerData(data) {
+            const infoElement = document.getElementById('serverInfo');
+            // 将数据格式化后显示
+            infoElement.textContent = JSON.stringify(data, null, 2);
         }
 
-        function loadServerStatus() {
-            const content = document.getElementById('status-content');
-            content.innerHTML = '<div class="loading">正在加载服务器状态...</div>';
-            debugLog(`开始请求: ${API_URL}`);
+        // 创建script标签实现跨域请求
+        const script = document.createElement('script');
+        // 拼接回调函数名到URL，使返回数据能触发该函数
+        script.src = 'http://203.135.99.51:10141/v2/server/status?token=info&callback=handleServerData';
+        document.body.appendChild(script);
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>服务器状态查询</title>
+</head>
+<body>
+    <h3>ARK开荒服务器状态</h3>
+    <pre id="serverInfo"></pre>
 
-            const script = document.createElement('script');
-            const callbackName = `jsonpCallback${Date.now()}`;
-
-            window[callbackName] = function (data) {
-                try {
-                    debugLog('收到API响应');
-                    debugLog(JSON.stringify(data, null, 2));
-
-                    if (data && data.status === "200") {
-                        displayStatus(data);
-                        debugLog('数据显示成功');
-                    } else {
-                        content.innerHTML = `<div class="error">服务器返回错误: ${data.error || '未知错误'}</div>`;
-                        debugLog(`错误: 服务器返回非200状态码 - ${data.status}`);
-                    }
-                } catch (error) {
-                    content.innerHTML = `<div class="error">解析数据失败: ${error.message}</div>`;
-                    debugLog(`错误: 数据解析失败 - ${error.message}`);
-                    console.error('数据解析错误:', error);
-                } finally {
-                    // 清理
-                    delete window[callbackName];
-                    document.body.removeChild(script);
-                }
-            };
-
-            // 构建JSONP请求URL
-            const jsonpUrl = `${JSONP_PROXY}${encodeURIComponent(API_URL)}&callback=${callbackName}`;
-            debugLog(`JSONP请求URL: ${jsonpUrl}`);
-
-            script.src = jsonpUrl;
-
-            script.onerror = function () {
-                content.innerHTML = '<div class="error">无法连接到服务器</div>';
-                debugLog('错误: 无法加载服务器状态 (script加载失败)');
-                delete window[callbackName];
-                document.body.removeChild(script);
-            };
-
-            document.body.appendChild(script);
+    <script>
+        // 定义回调函数，用于处理返回的数据
+        function handleServerData(data) {
+            const infoElement = document.getElementById('serverInfo');
+            // 将数据格式化后显示
+            infoElement.textContent = JSON.stringify(data, null, 2);
         }
 
-        function displayStatus(data) {
-            const content = document.getElementById('status-content');
-
-            content.innerHTML = `
-                    <div class="status-item">
-                        <span class="label">服务器状态:</span>
-                        <span class="value"><span class="highlight">${data.status === "200" ? "正常" : "异常"}</span></span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">服务器名称:</span>
-                        <span class="value">${data.name || '未设置'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">游戏版本:</span>
-                        <span class="value">${data.serverversion || '未知'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">TShock版本:</span>
-                        <span class="value">${data.tshockversion || '未知'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">服务器端口:</span>
-                        <span class="value">${data.port || '未知'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">在线玩家:</span>
-                        <span class="value">${data.playercount || 0}/${data.maxplayers || '?'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">世界名称:</span>
-                        <span class="value">${data.world || '未设置'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">运行时间:</span>
-                        <span class="value">${data.uptime || '未知'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">服务器密码:</span>
-                        <span class="value">${data.serverpassword ? '已设置' : '未设置'}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">更新时间:</span>
-                        <span class="value">${new Date().toLocaleTimeString()}</span>
-                    </div>
-                `;
-        }
-
-        // 页面加载时自动获取状态
-        window.onload = loadServerStatus;
-
-        // 每30秒自动刷新一次
-        setInterval(loadServerStatus, 30000);
+        // 创建script标签实现跨域请求
+        const script = document.createElement('script');
+        // 拼接回调函数名到URL，使返回数据能触发该函数
+        script.src = 'http://203.135.99.51:10141/v2/server/status?token=info&callback=handleServerData';
+        document.body.appendChild(script);
     </script>
 </body>
 </html>
