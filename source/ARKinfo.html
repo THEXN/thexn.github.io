@@ -269,7 +269,7 @@ title: ARK服务器
                     port: 7776,
                     apiBaseUrl: "http://203.135.99.51:10141/v2/server", // 服务器1的API地址
                     apiEndpoint: "/status?token=info",
-                    intro: "这是我们的主要开荒服务器，提供10倍资源倍率，支持PVE和小规模PVP，欢迎新老玩家加入！"
+                    intro: "这是我们的主要开荒服务器，欢迎新老玩家加入！"
                 },
                 {
                     id: 2,
@@ -278,7 +278,7 @@ title: ARK服务器
                     port: 7777,
                     apiBaseUrl: "http://203.135.99.51:10140/v2/server", // 服务器2的API地址
                     apiEndpoint: "/status?token=info",
-                    intro: "这是我们的进阶服务器，提供更高的难度和更丰富的游戏内容，适合有经验的玩家。"
+                    intro: "PVP+PVE+养老+全物品服务器"
                 }
             ],
 
@@ -461,7 +461,7 @@ title: ARK服务器
                                     ${server.intro || '暂无介绍'}
                                 </div>
                                 <button class="intro-toggle" data-id="${server.id}">
-                                    ${server.intro ? '隐藏介绍' : '显示介绍'}
+                                    显示介绍
                                 </button>
                                 <button class="refresh-btn" data-id="${server.id}">刷新状态</button>
                             `;
@@ -487,8 +487,13 @@ title: ARK服务器
                 const intro = document.getElementById(`intro-${id}`);
                 const button = e.target;
 
-                intro.style.display = intro.style.display === 'block' ? 'none' : 'block';
-                button.textContent = intro.style.display === 'block' ? '隐藏介绍' : '显示介绍';
+                if (intro.style.display === 'none') {
+                    intro.style.display = 'block';
+                    button.textContent = '隐藏介绍';
+                } else {
+                    intro.style.display = 'none';
+                    button.textContent = '显示介绍';
+                }
             },
 
             refreshServerStatus(e) {
